@@ -1,15 +1,15 @@
-﻿using CustomRenderer;
+﻿using Android.Content;
+using CustomRenderer;
 using CustomRenderer.Droid;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
-using Android.Content;
 
 [assembly: ExportRenderer(typeof(HybridWebView), typeof(HybridWebViewRenderer))]
 namespace CustomRenderer.Droid
 {
-    public class HybridWebViewRenderer : ViewRenderer<HybridWebView, Android.Webkit.WebView>
+    public class HybridWebViewRenderer : WebViewRenderer
     {
-        const string JavaScriptFunction = "function invokeCSharpAction(data){jsBridge.invokeAction(data);}";
+        const string JavascriptFunction = "function invokeCSharpAction(data){jsBridge.invokeAction(data);}";
         Context _context;
 
         public HybridWebViewRenderer(Context context) : base(context)
@@ -17,36 +17,30 @@ namespace CustomRenderer.Droid
             _context = context;
         }
 
-        protected override void OnElementChanged(ElementChangedEventArgs<HybridWebView> e)
+        protected override void OnElementChanged(ElementChangedEventArgs<WebView> e)
         {
             base.OnElementChanged(e);
 
-            if (Control == null)
-            {
-                var webView = new Android.Webkit.WebView(_context);
-                webView.Settings.JavaScriptEnabled = true;
-                SetNativeControl(webView);
-            }
             if (e.OldElement != null)
             {
                 Control.RemoveJavascriptInterface("jsBridge");
-                var hybridWebView = e.OldElement as HybridWebView;
-                hybridWebView.Cleanup();
+                ((HybridWebView)Element).Cleanup();
             }
             if (e.NewElement != null)
             {
+                Control.SetWebViewClient(new JavascriptWebViewClient(this, $"javascript: {JavascriptFunction}"));
                 Control.AddJavascriptInterface(new JSBridge(this), "jsBridge");
-                Control.LoadUrl(string.Format("file:///android_asset/Content/{0}", Element.Uri));
-                InjectJS(JavaScriptFunction);
+                Control.LoadUrl($"file:///android_asset/Content/{((HybridWebView)Element).Uri}");
             }
         }
 
-        void InjectJS(string script)
+        protected override void Dispose(bool disposing)
         {
-            if (Control != null)
+            if (disposing)
             {
-                Control.LoadUrl(string.Format("javascript: {0}", script));
+                ((HybridWebView)Element).Cleanup();
             }
+            base.Dispose(disposing);
         }
     }
 }

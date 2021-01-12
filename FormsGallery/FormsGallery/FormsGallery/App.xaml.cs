@@ -1,9 +1,7 @@
-﻿using System;
-using Xamarin.Forms;
+﻿using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 [assembly: XamlCompilation(XamlCompilationOptions.Compile)]
-
 namespace FormsGallery
 {
     public partial class App : Application
@@ -11,7 +9,6 @@ namespace FormsGallery
         public App()
         {
             InitializeComponent();
-
             MainPage = new NavigationPage(new HomePage());
         }
 
